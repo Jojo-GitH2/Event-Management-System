@@ -47,6 +47,22 @@ UserSchema.pre('save', async function (next) {
   next();
 });
 
+// Create a Mongoose static method for login
+UserSchema.statics.login = async function (identifier, password) {
+  // Find User by email or username
+  const user = await this.findOne({ $or: [{ email: identifier }, { username: identifier }] });
+  
+  if (user) {
+    // Check if password is correct
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (isMatch) {
+      return user;
+    }
+    throw Error('Invalid password');
+  }
+  throw Error('Invalid email or username');
+};
+
 
 const User = mongoose.model("User", UserSchema);
 

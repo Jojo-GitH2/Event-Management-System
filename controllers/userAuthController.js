@@ -4,9 +4,10 @@ const Token = require("../models/Token");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const fs = require("fs");
+const bcrypt = require("bcryptjs");
 
 const handleValidationErrors = (error) => {
-    let errorMessages = {};
+    let errorMessages = {email: '', password: '', username: ''};
 
     // Validation errors
     if (error.message.includes("User validation failed")) {
@@ -17,6 +18,16 @@ const handleValidationErrors = (error) => {
     // Duplicate key error
     if (error.code === 11000) {
         errorMessages.email = 'An account for this email already exists. Please login.';
+    }
+
+    // Incorrect email or password
+
+    if (error.message === "Invalid email or username") {
+        errorMessages.email = "Invalid email or username";
+    }
+
+    if (error.message === "Invalid password") {
+        errorMessages.password = "Invalid password";
     }
 
     return errorMessages;
@@ -55,7 +66,7 @@ const createAccessToken = (id) => {
 
 const signup = async (req, res) => {
     try {
-        
+
         const { username, email, password } = req.body;
 
         // Check for existing username
@@ -72,7 +83,7 @@ const signup = async (req, res) => {
         const verifyUserToken = new Token({ userId: newUser._id, token: crypto.randomBytes(16).toString('hex') });
 
         await verifyUserToken.save();
-        
+
 
         // Setup and send verification email
 
@@ -85,10 +96,10 @@ const signup = async (req, res) => {
 
         res.status(201).json({ message: "User Created" });
     } catch (error) {
-       
+
         const errors = handleValidationErrors(error);
 
-    
+
         res.status(400).json({ errors });
     }
 };
@@ -103,20 +114,47 @@ const verifyUser = async (req, res) => {
         const user = await User.findOneAndUpdate({ _id: token.userId }, { $set: { verified: true } });
         await Token.findByIdAndDelete(token._id);
 
-        res.status(200).json({ user: user.email, message: "User Verified"})
+        res.status(200).json({ user: user.email, message: "User Verified" })
     } catch (error) {
         console.log(error);
     }
 }
 
 const login = async (req, res) => {
-    const { username, email, password } = req.body;
+
+    try {
+        const { identifier, password } = req.body;
+
+
+        // Call Static method on User model
+        const user = await User.login(identifier, password);
+
+        if (!user.verified) {
+            return res.status(400).json({ message: "Please verify your email" });
+        }
+
+        // Create JWT token
+
+        accessToken = createAccessToken(user._id);
+
+        // Send JWT token as cookie to frontend
+        res.cookie('jwt', accessToken, { httpOnly: true, maxAge: maxAge * 1000 });
+
+        res.status(200).json({ user });
+
+    } catch (error) {
+        const errors = handleValidationErrors(error);
+        res.status(400).json({errors})
+    }
+
 
     // accessToken = createAccessToken(newUser._id);
     // res.cookie('jwt', accessToken, { httpOnly: true, maxAge: maxAge * 1000 });
 };
 
 const logout = (req, res) => {
+
+    res.cookie('jwt', '', { maxAge: 1 })
     res.send("User Logged out");
 };
 
