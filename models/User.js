@@ -60,7 +60,7 @@ UserSchema.statics.login = async function (identifier, password) {
     }
     throw Error('Invalid password');
   }
-  throw Error('Invalid email or username');
+  throw Error('This account does not exist, Please sign up');
 };
 
 

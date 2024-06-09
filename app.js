@@ -32,6 +32,12 @@ mongoose
   .then(() => console.log("MongoDB Connected..."))
   .catch((err) => console.log(err));
 
+
+// Root Route
+app.get("/", (req, res) => {
+  res.send("Hello World");
+});
+
 // Routes for Users
 
 app.use("/users", userRoutes);
