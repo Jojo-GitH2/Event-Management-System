@@ -7,7 +7,7 @@ const fs = require("fs");
 const bcrypt = require("bcryptjs");
 
 const handleValidationErrors = (error) => {
-    let errorMessages = {email: '', password: '', username: ''};
+    let errorMessages = { email: '', password: '', username: '' };
 
     // Validation errors
     if (error.message.includes("User validation failed")) {
@@ -22,13 +22,17 @@ const handleValidationErrors = (error) => {
 
     // Incorrect email or password
 
-    if (error.message === "Invalid email or username") {
-        errorMessages.email = "Invalid email or username";
+    if (error.message === "Invalid Credentials") {
+        errorMessages.login = error.message;
+        // errorMessages.password = "Invalid Credentials";
+    }
+    if (error.message === "Enter all fields") {
+        errorMessages.login = error.message;
     }
 
-    if (error.message === "Invalid password") {
-        errorMessages.password = "Invalid password";
-    }
+    // if (error.message === "Invalid password") {
+    //     errorMessages.password = "Invalid password";
+    // }
 
     return errorMessages;
     // next();
@@ -144,7 +148,7 @@ const login = async (req, res) => {
 
     } catch (error) {
         const errors = handleValidationErrors(error);
-        res.status(400).json({errors})
+        res.status(400).json({ errors })
     }
 
 
@@ -155,8 +159,10 @@ const login = async (req, res) => {
 const logout = (req, res) => {
 
     res.cookie('jwt', '', { maxAge: 1 })
-    res.send("User Logged out");
+    res.status(200).json("User Logged out");
 };
+
+// Come back for Reset Password and Forgot Password
 
 module.exports = {
     signup,

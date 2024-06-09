@@ -49,6 +49,10 @@ UserSchema.pre('save', async function (next) {
 
 // Create a Mongoose static method for login
 UserSchema.statics.login = async function (identifier, password) {
+
+  if (!identifier || !password) {
+    throw Error('Enter all fields');
+  }
   // Find User by email or username
   const user = await this.findOne({ $or: [{ email: identifier }, { username: identifier }] });
   
@@ -58,9 +62,9 @@ UserSchema.statics.login = async function (identifier, password) {
     if (isMatch) {
       return user;
     }
-    throw Error('Invalid password');
+    // throw Error('Invalid password');
   }
-  throw Error('This account does not exist, Please sign up');
+  throw Error('Invalid Credentials');
 };
 
 
