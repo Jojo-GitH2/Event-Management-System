@@ -1,77 +1,21 @@
 const User = require("../models/User");
-const jwt = require("jsonwebtoken");
+// const jwt = require("jsonwebtoken");
 const Token = require("../models/Token");
-const nodemailer = require("nodemailer");
+// const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const fs = require("fs");
-const bcrypt = require("bcryptjs");
+// const bcrypt = require("bcryptjs");
+const { handleValidationErrors, sendEmail, createAccessToken } = require("../utils");
 
-const handleValidationErrors = (error) => {
-    let errorMessages = { email: '', password: '', username: '' };
 
-    // Validation errors
-    if (error.message.includes("User validation failed")) {
-        Object.values(error.errors).forEach(({ properties }) => {
-            errorMessages[properties.path] = properties.message;
-        });
-    }
-    // Duplicate key error
-    if (error.code === 11000) {
-        errorMessages.email = 'An account for this email already exists. Please login.';
-    }
 
-    // Incorrect email or password
-
-    if (error.message === "Invalid Credentials") {
-        errorMessages.login = error.message;
-        // errorMessages.password = "Invalid Credentials";
-    }
-    if (error.message === "Enter all fields") {
-        errorMessages.login = error.message;
-    }
-
-    // if (error.message === "Invalid password") {
-    //     errorMessages.password = "Invalid password";
-    // }
-
-    return errorMessages;
-    // next();
-};
-
-const sendEmail = async (email, subject, html) => {
-    try {
-        const transporter = nodemailer.createTransport({
-            service: process.env.EMAIL_SERVICE,
-            auth: {
-                user: process.env.EMAIL,
-                pass: process.env.PASSWORD
-            }
-        });
-
-        await transporter.sendMail({
-            from: process.env.EMAIL,
-            to: email,
-            subject,
-            html
-        });
-    } catch (error) {
-        console.log(error);
-    }
-}
-
-const maxAge = 1 * 24 * 60 * 60;
-
-const createAccessToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: maxAge,
-    });
-
-}
 
 const signup = async (req, res) => {
     try {
 
         const { username, email, password } = req.body;
+
+        res.cookie('jwt', '', { maxAge: 1 })
 
         // Check for existing username
         const existingUser = await User.findOne({ username });
@@ -91,7 +35,7 @@ const signup = async (req, res) => {
 
         // Setup and send verification email
 
-        const verificationLink = `${process.env.BASE_URL}/users/verify/${verifyUserToken.token}`;
+        const verificationLink = `${process.env.BASE_URL}/api/v1/users/verify/${verifyUserToken.token}`;
         let emailContent = fs.readFileSync("./emailTemplates/verifyEmail.html", "utf8");
         emailContent = emailContent.replace("{{verificationLink}}", verificationLink);
         emailContent = emailContent.replace("{{username}}", username);
@@ -128,6 +72,7 @@ const login = async (req, res) => {
 
     try {
         const { identifier, password } = req.body;
+        console.log(identifier, password);
 
 
         // Call Static method on User model
@@ -142,12 +87,13 @@ const login = async (req, res) => {
         accessToken = createAccessToken(user._id);
 
         // Send JWT token as cookie to frontend
-        res.cookie('jwt', accessToken, { httpOnly: true, maxAge: maxAge * 1000 });
+        res.cookie('jwt', accessToken, { httpOnly: true, maxAge: process.env.MAX_AGE * 1000 });
 
         res.status(200).json({ user });
 
     } catch (error) {
         const errors = handleValidationErrors(error);
+        console.log(error.message)
         res.status(400).json({ errors })
     }
 

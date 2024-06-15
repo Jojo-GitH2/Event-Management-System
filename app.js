@@ -40,8 +40,8 @@ app.get("/", (req, res) => {
 
 // Routes for Users
 
-app.use("/users", userRoutes);
+app.use("/api/v1/users", userRoutes);
 
 // Routes for events
 
-app.use("/events", eventRoutes);
+app.use("/api/v1/events", eventRoutes);

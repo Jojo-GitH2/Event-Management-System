@@ -7,7 +7,7 @@ router.get("/", (req, res) => {
     res.send("User Routes");
 });
     
-router.post("/signup", signup);
+router.post("/signup",  signup);
 
 router.get("/verify/:token", verifyUser);
 
