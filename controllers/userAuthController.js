@@ -36,7 +36,7 @@ const signup = async (req, res) => {
         // Setup and send verification email
 
         const verificationLink = `${process.env.BASE_URL}/api/v1/users/verify/${verifyUserToken.token}`;
-        let emailContent = fs.readFileSync("./emailTemplates/verifyEmail.html", "utf8");
+        let emailContent = fs.readFileSync("./notifications/verifyEmail.html", "utf8");
         emailContent = emailContent.replace("{{verificationLink}}", verificationLink);
         emailContent = emailContent.replace("{{username}}", username);
 
@@ -72,7 +72,6 @@ const login = async (req, res) => {
 
     try {
         const { identifier, password } = req.body;
-        console.log(identifier, password);
 
 
         // Call Static method on User model
@@ -87,13 +86,13 @@ const login = async (req, res) => {
         accessToken = createAccessToken(user._id);
 
         // Send JWT token as cookie to frontend
-        res.cookie('jwt', accessToken, { httpOnly: true, maxAge: process.env.MAX_AGE * 1000 });
+        res.cookie('jwt', accessToken, { httpOnly: true, maxAge: process.env.MAX_AGE * 1000 * 3 });
 
         res.status(200).json({ user });
 
     } catch (error) {
         const errors = handleValidationErrors(error);
-        console.log(error.message)
+        console.log(error)
         res.status(400).json({ errors })
     }
 

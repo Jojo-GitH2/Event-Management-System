@@ -1,0 +1,89 @@
+<!-- Email Notification to show users that they have successfully created an Event -->
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Welcome to Our Event Management System</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+
+      .container {
+        width: 80%;
+
+        margin: auto;
+
+        background-color: #f7f7f7;
+
+        padding: 20px;
+
+        border-radius: 5px;
+
+        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        text-align: center;
+
+        padding-bottom: 20px;
+
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .content {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>Hello, {{username}}!</h2>
+      </div>
+
+      <div class="content">
+        <p>
+          Thank you for creating an event on our event management system. We're
+          excited to help you manage and enjoy your events.
+        </p>
+
+        <!-- Show event details: Event time, date, location and Title -->
+
+        <p>Event Details:</p>
+
+        <ul>
+          <li><strong>Title:</strong> {{eventTitle}}</li>
+          <li><strong>Description:</strong> {{eventDescription}}</li>
+          <li><strong>Date:</strong> {{eventDate}}</li>
+          <li><strong>Time:</strong> {{eventTime}}</li>
+          <li><strong>Location:</strong> {{eventLocation}}</li>
+        </ul>
+
+        <!-- Link to share to others to RSVP -->
+
+        <p>
+          Share this link with others to RSVP: <a href="{{rsvpLink}}">RSVP</a>
+        </p>
+
+        <p>
+          Please note that the event details are subject to change. We will keep
+          you updated if there are any changes. For more information, please
+          visit the <a href="{{eventLink}}">Event Page</a>.
+        </p>
+
+        <p>
+          If you have any questions or need assistance, please don't hesitate to
+          contact us.
+        </p>
+
+        <p>Best regards,</p>
+
+        <p>The Event Management Team</p>
+      </div>
+    </div>
+  </body>
+</html>

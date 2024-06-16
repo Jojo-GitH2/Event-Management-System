@@ -1,7 +1,8 @@
 const Event = require("../models/Event");
 const User = require("../models/User");
+const fs = require("fs");
 
-const { handleEventErrors } = require("../utils");
+const { handleEventErrors, sendEmail, formatDate } = require("../utils");
 
 const createEvent = async (req, res) => {
     try {
@@ -17,16 +18,40 @@ const createEvent = async (req, res) => {
         });
         await event.participants.push(organizer);
         await event.save();
+        
+
+        // Send Email to Organizer
+
+        const organizerUser = await User.findById(organizer);
+        const email = organizerUser.email;
+        const username = organizerUser.username;
+        const eventLink = `${process.env.BASE_URL}/api/v1/events/${event._id}`;
+        const rsvpLink = `${process.env.BASE_URL}/api/v1/events/rsvp?eventId=${event._id}`;
+        let emailContent = fs.readFileSync("./notifications/eventCreated.html", "utf8");
+        emailContent = emailContent.replace("{{username}}", username);
+        emailContent = emailContent.replace("{{eventTitle}}", title);
+        emailContent = emailContent.replace("{{eventDescription}}", description);
+        emailContent = emailContent.replace("{{eventDate}}", date);
+        emailContent = emailContent.replace("{{eventTime}}", time);
+        emailContent = emailContent.replace("{{eventLocation}}", location);
+        emailContent = emailContent.replace("{{eventLink}}", eventLink);
+        emailContent = emailContent.replace("{{rsvpLink}}", rsvpLink);
+
+
+        await sendEmail(email, "Event Created", emailContent);
+
 
         // For convenience, we would like to return the link to the event
 
-        const rsvpLink = `${process.env.BASE_URL}/events/rsvp?eventId=${event._id}`;
-        const eventLink = `${process.env.BASE_URL}/events/${event._id}`;
+        // const rsvpLink = `${process.env.BASE_URL}/events/rsvp?eventId=${event._id}`;
+        // const eventLink = `${process.env.BASE_URL}/events/${event._id}`;
+
+        
 
         res.status(201).json({ eventLink, rsvpLink });
     } catch (error) {
         const errors = handleEventErrors(error);
-        // console.log(error);
+        console.log(error);
         res.status(400).json({ errors });
     }
 };
@@ -90,6 +115,26 @@ const rsvpEvent = async (req, res) => {
         event.participants.push(userId);
         await event.save();
 
+        // Send Email to users who have registered for the event
+
+        const user = await User.findById(userId);
+        const email = user.email;
+        const username = user.username;
+
+        // Only dsiplay the date part of the date value in the email
+        date = formatDate(event.date);
+        
+        // console.log(date);
+        let emailContent = fs.readFileSync("./notifications/eventRSVP.html", "utf8");
+        emailContent = emailContent.replace("{{username}}", username);
+        emailContent = emailContent.replace("{{eventTitle}}", event.title);
+        emailContent = emailContent.replace("{{eventDescription}}", event.description);
+        emailContent = emailContent.replace("{{eventDate}}", date);
+        emailContent = emailContent.replace("{{eventTime}}", event.time);
+        emailContent = emailContent.replace("{{eventLocation}}", event.location);
+
+        await sendEmail(email, "Registration Confirmation", emailContent);
+
         res
             .status(200)
             .json({ message: "You have successfully registered for this event." });
@@ -118,6 +163,9 @@ const getEventById = async (req, res) => {
 
         // Organizer's Name
         const organizer = await User.findById(event.organizer);
+        if (!organizer) {
+            organizer = { username: "Unknown" };
+        }
 
         res.status(200).json({
             organizer: organizer.username,
@@ -152,7 +200,7 @@ const updateEvent = async (req, res) => {
         if (organizer != organizerMain) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        
+
         const { title, description, date, time, location } = req.body;
 
         const newEvent = await Event.findByIdAndUpdate(eventId, {
@@ -162,14 +210,14 @@ const updateEvent = async (req, res) => {
             time,
             location
         }, { new: true });
-        
+
         res.status(200).json({ newEvent });
-        
-        
-        
+
+
+
     } catch (error) {
         console.log(error);
-        
+
     }
 }
 
@@ -191,7 +239,7 @@ const deleteOneEvent = async (req, res) => {
         res.status(200).json({ message: "Event deleted successfully" });
     } catch (error) {
         console.log(error);
-    }   
+    }
 
 
 }

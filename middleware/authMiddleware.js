@@ -9,6 +9,7 @@ const requireAuth = (req, res, next) => {
         jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
             if (err) {
                 console.log(err.message);
+                res.status(400).json({ message: "Please login" });
             } else {
                 // console.log(decodedToken);
                 req.userId = decodedToken.id;

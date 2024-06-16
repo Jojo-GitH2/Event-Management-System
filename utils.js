@@ -58,8 +58,10 @@ const sendEmail = async (email, subject, html) => {
 
 
 const createAccessToken = (id) => {
+    // console.log(parseInt(process.env.MAX_AGE, 10));
+    // console.log(process.env.JWT_SECRET, process.env.MAX_AGE)
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.MAX_AGE,
+        expiresIn: process.env.MAX_AGE * 3,
     });
 
 }
@@ -97,4 +99,11 @@ const handleEventErrors = (error) => {
     return errorMessages;
 };
 
-module.exports = { handleValidationErrors, sendEmail, createAccessToken, handleEventErrors };  
+const formatDate = (dateString) => {
+    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
+};
+
+
+
+module.exports = { handleValidationErrors, sendEmail, createAccessToken, handleEventErrors, formatDate };  
