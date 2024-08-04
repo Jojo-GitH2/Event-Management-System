@@ -1,6 +1,7 @@
 const Event = require("../models/Event");
 const User = require("../models/User");
 const fs = require("fs");
+const cron = require("node-cron");
 
 const { handleEventErrors, sendEmail, formatDate } = require("../utils");
 
@@ -18,7 +19,7 @@ const createEvent = async (req, res) => {
         });
         await event.participants.push(organizer);
         await event.save();
-        
+
 
         // Send Email to Organizer
 
@@ -46,7 +47,7 @@ const createEvent = async (req, res) => {
         // const rsvpLink = `${process.env.BASE_URL}/events/rsvp?eventId=${event._id}`;
         // const eventLink = `${process.env.BASE_URL}/events/${event._id}`;
 
-        
+
 
         res.status(201).json({ eventLink, rsvpLink });
     } catch (error) {
@@ -123,7 +124,7 @@ const rsvpEvent = async (req, res) => {
 
         // Only dsiplay the date part of the date value in the email
         date = formatDate(event.date);
-        
+
         // console.log(date);
         let emailContent = fs.readFileSync("./notifications/eventRSVP.html", "utf8");
         emailContent = emailContent.replace("{{username}}", username);
@@ -252,6 +253,23 @@ const deleteAllEvents = async (req, res) => {
         console.log(error);
     }
 }
+
+
+
+// Include a cron job that checks the date and the time of the event (every hour) changes the status of the event to closed if the date and time have passed
+
+// cron.schedule("* * * * *", async () => {
+//     try {
+
+//         // const currentTime  = 
+//         console.log("Running Cron Job every minute");
+//     } catch (error) {
+//         console.log(error);
+//     }
+// }, {
+//     scheduled: true,
+//     timezone: "Africa/Lagos"
+// });
 
 module.exports = {
     createEvent,

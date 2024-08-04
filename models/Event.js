@@ -14,7 +14,8 @@ const EventSchema = new mongoose.Schema(
     },
     date: {
       type: Date,
-      required: [true, "Please enter a date in this format: YYYY-MM-DD"]
+      required: [true, "Please enter a date in this format: YYYY-MM-DD"],
+      index : true,
     },
     time: {
       type: String,
@@ -46,20 +47,31 @@ const EventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Create a Mongoose hook to convert the date from a String to Date object
+// Create a Mongoose hook to validate the date and time
 EventSchema.pre("save", function (next) {
-  this.date = new Date(this.date);
+
+
+  const year = this.date.getFullYear();
+  const month = this.date.getMonth() + 1;
+  const day = this.date.getDate();
+
+  const [time, period] = this.time.split(" ");
+  const [hours, minutes] = time.split(":").map(Number);
+
+  const adjustedHours = period === "PM" ? hours + 12 : hours; // Adjust for PM
+
+  this.date = new Date(year, month - 1, day, adjustedHours, minutes).toDateString();
+  
+  // this.date = new Date(this.date);
   // console.log(this.date);
 
 
   // Ensure that the time is in the format HH:MM AM/PM
-  const time = this.time.split(":");
-  const hours = parseInt(time[0]);
-  const minutes = parseInt(time[1].split(" ")[0]);
-  const period = time[1].split(" ")[1];
   if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59 || (period !== "AM" && period !== "PM")) {
     return next(new Error("Please enter a time in this format: HH:MM AM/PM"));
   };
+  
+  console.log(this.date, new Date(), this.date < new Date(), this.date > new Date(), typeof this.date, typeof new Date());
 
 
 

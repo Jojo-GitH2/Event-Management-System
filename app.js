@@ -35,7 +35,7 @@ mongoose
 
 // Root Route
 app.get("/", (req, res) => {
-  res.send("Hello World");
+  res.send("Home Page");
 });
 
 // Routes for Users
